@@ -57,12 +57,15 @@ Send Messages
                         Attach a title to the MMS Message
                         
   -i IMAGE, --image IMAGE
+  
                         Attach a File (ie .jpg .png .gif) or Url to Image file
                         
   -a ALTMSG, --altmsg ALTMSG
+  
                         Alterntive message if image name was given and can not be found
                         
   -p PATH, --path PATH  
+  
                         Default File Path: mms_files/
                         
                         Image File Path: movie_posters/
@@ -72,14 +75,18 @@ Send Messages
                         unless otherwise specified.
                         
   -b BAUDRATE, --baudrate BAUDRATE
+  
                         Default: 115200
                         
   -o PORT, --port PORT  
+  
                         Default: /dev/ttyUSB3
   
   -d, --debug           
+  
                         Default: False
   --output OUTPUT      
+  
                         json, text, boolean Default: json
   
   Receive SMS Messages
