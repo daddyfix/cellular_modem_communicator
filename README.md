@@ -1,4 +1,5 @@
-Python Cellular Modem GSM Communicator Serial Connection
+Send MMS/SMS and Recieve SMS from Cellular LTE Modem
+----------------------------------------------------
 
 Script sends/receives MMS/SMS Messages to one or more recipients.
 
@@ -14,13 +15,15 @@ and Sixfab.com PCIe module...
 
   https://sixfab.com/product/quectel-ec25-mini-pcle-4glte-module/
   
-Cellular Info:
-  Country: Canada (Sudbury Ontario)
-  Micro SIM Service Provider: Rogers.com
-  Band: North America
-  APN: ltemobile.apn
-  Rogers: mms.gprs.rogers.com
-  Port: /dev/ttyUSB3
+Cellular Info
+-------------
+
+Country: Canada (Sudbury Ontario)
+Micro SIM Service Provider: Rogers.com
+Band: North America
+APN: ltemobile.apn
+Rogers: mms.gprs.rogers.com
+Port: /dev/ttyUSB3
   
   
 USAGE
@@ -54,15 +57,12 @@ Send Messages
                         Attach a title to the MMS Message
                         
   -i IMAGE, --image IMAGE
-  
                         Attach a File (ie .jpg .png .gif) or Url to Image file
                         
   -a ALTMSG, --altmsg ALTMSG
-  
                         Alterntive message if image name was given and can not be found
                         
   -p PATH, --path PATH  
-  
                         Default File Path: mms_files/
                         
                         Image File Path: movie_posters/
@@ -72,18 +72,14 @@ Send Messages
                         unless otherwise specified.
                         
   -b BAUDRATE, --baudrate BAUDRATE
-  
                         Default: 115200
                         
   -o PORT, --port PORT  
-  
                         Default: /dev/ttyUSB3
   
   -d, --debug           
-  
                         Default: False
-  --output OUTPUT       
-  
+  --output OUTPUT      
                         json, text, boolean Default: json
   
   Receive SMS Messages
@@ -91,10 +87,8 @@ Send Messages
   
   -R, --readsms         Read all the SMS messages recieved
   
-  
   -C, --deletesms       Delete all the SMS messages recieved
-  
-  
+ 
   -F FORWARDSMS, --forwardsms FORWARDSMS
   
                         Forward all the SMS messages recieved to recipient
