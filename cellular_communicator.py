@@ -7,7 +7,7 @@
 
 ---------------------------------------------------------- """
 import pip, time, sys
-for im in ["serial", "humanfriendly", "magic", "python-dateutil", "Pillow"]:
+for im in ["serial", "humanfriendly", "python-magic", "python-dateutil", "Pillow"]:
     try:
         pkg = im
         if 'dateutil' in im:
@@ -124,11 +124,10 @@ query - AT Command to query a setting
 expected - search string for valid response
 correct - AT Command to set the Setting to desired Params
 """
+# currently configured for AT&T
 modem={}
 modem[0]    = { 'desc' : 'APN details',
                     'query': 'AT+QICSGP=1', 
-                    #'expected': '"fast.tmobile.com","",""', 
-                    #'correct': 'AT+QICSGP=1,1,"fast.tmobile.com","","",0'}
                     'expected': '"NXTGENPHONE","",""',
                     'correct' : 'AT+QICSGP=1,1,"NXTGENPHONE","","",0'}
 modem[1]    = { 'desc' : 'Context ID',
@@ -137,16 +136,12 @@ modem[1]    = { 'desc' : 'Context ID',
                     'correct': 'AT+QMMSCFG="contextid",1'}
 modem[2]    = { 'desc' : 'Mult Media Service Centre',
                     'query': 'AT+QMMSCFG="mmsc"', 
-                    #'expected': 'mms.msg.eng.t-mobile.com/mms/wapenc', 
-                    #'correct': 'AT+QMMSCFG="mmsc", "http://mms.msg.eng.t-mobile.com/mms/wapenc"'}
                     'expected': 'mmsc.mobile.att.net',
                     'correct': 'AT+QMMSCFG="mmsc", "http://mmsc.mobile.att.net"'}
 modem[3]    = { 'desc' : 'Provider Proxy Details',
                     'query': 'AT+QMMSCFG="proxy"',
                     'expected': '172.26.39.1',
                     'correct': 'AT+QMMSCFG="proxy","172.26.39.1",80'}
-                    #'expected': '149.254.201.135',
-                    #'correct': 'AT+QMMSCFG="proxy","149.254.201.135",80'}
 
 '''
 modem[4]    = { 'desc' : 'Character Set',
@@ -1519,7 +1514,6 @@ Create a Message and Send
 details_dict = create_message(args['recipient'], args['message'], args['image'], args['title'], args['altmsg'])
 
 status = send_message(details_dict)
-
 if not status:
     msg = "*** Error Sending Message: "+status+" ***"
     debug_msg(str(msg))
