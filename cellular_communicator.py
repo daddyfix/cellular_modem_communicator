@@ -7,7 +7,7 @@
 
 ---------------------------------------------------------- """
 import pip, time, sys
-for im in ["serial", "humanfriendly", "magic", "python-dateutil", "Pillow"]:
+for im in ["serial", "humanfriendly", "python-magic", "python-dateutil", "Pillow"]:
     try:
         pkg = im
         if 'dateutil' in im:
@@ -17,11 +17,11 @@ for im in ["serial", "humanfriendly", "magic", "python-dateutil", "Pillow"]:
         globals()[pkg] = __import__(pkg)
     except ImportError:
         if 'Pillow' in im:
-            print "Cannot install Pillow via pip install"
-            print "Please install via ..."
-            print "sudo apt-get install python-imaging"
+            print("Cannot install Pillow via pip install")
+            print("Please install via ...")
+            print("sudo apt-get install python-imaging")
             sys.exit()
-        print "Installing "+im+" module..."
+        print("Installing "+im+" module...")
         pip.main(['install', im])
         time.sleep(2)
 
@@ -65,9 +65,9 @@ import re
 import argparse
 
 # URL/Web Functions
-import urllib
-import urllib2
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 
 # Database
 import sqlite3
@@ -124,23 +124,25 @@ query - AT Command to query a setting
 expected - search string for valid response
 correct - AT Command to set the Setting to desired Params
 """
+# currently configured for AT&T
 modem={}
 modem[0]    = { 'desc' : 'APN details',
                     'query': 'AT+QICSGP=1', 
-                    'expected': '"ltemobile.apn","",""', 
-                    'correct': 'AT+QICSGP=1,1,"ltemobile.apn","","",0'}
+                    'expected': '"NXTGENPHONE","",""',
+                    'correct' : 'AT+QICSGP=1,1,"NXTGENPHONE","","",0'}
 modem[1]    = { 'desc' : 'Context ID',
                     'query': 'AT+QMMSCFG="contextid"', 
                     'expected': '"contextid",1', 
                     'correct': 'AT+QMMSCFG="contextid",1'}
 modem[2]    = { 'desc' : 'Mult Media Service Centre',
                     'query': 'AT+QMMSCFG="mmsc"', 
-                    'expected': 'mms.gprs.rogers.com', 
-                    'correct': 'AT+QMMSCFG="mmsc", "http://mms.gprs.rogers.com"'}
+                    'expected': 'mmsc.mobile.att.net',
+                    'correct': 'AT+QMMSCFG="mmsc", "http://mmsc.mobile.att.net"'}
 modem[3]    = { 'desc' : 'Provider Proxy Details',
-                    'query': 'AT+QMMSCFG="proxy"', 
-                    'expected': '10.128.1.69', 
-                    'correct': 'AT+QMMSCFG="proxy","10.128.1.69",80'}
+                    'query': 'AT+QMMSCFG="proxy"',
+                    'expected': '172.26.39.1',
+                    'correct': 'AT+QMMSCFG="proxy","172.26.39.1",80'}
+
 '''
 modem[4]    = { 'desc' : 'Character Set',
                     'query': 'AT+QMMSCFG="character"', 
@@ -173,7 +175,7 @@ def init_db_connection():
     if not os.path.isfile(DBFILE):
         debug_msg("- Sqlite Database: "+DBFILE+" does not exist. Creating DB...")
         gConn = sqlite3.connect(DBFILE)
-        os.chmod(DBFILE, 0766)
+        os.chmod(DBFILE, 0o766)
         create_table()
     elif gConn == None:
         debug_msg("- SQlite File Found: "+DBFILE)
@@ -325,6 +327,7 @@ def debug_msg(mystr, linefeed = True):
         sys.stdout.flush()
 
     logging.debug(get_date()+" ::: "+mystr)
+    print(mystr)
 
 
 """
@@ -347,11 +350,11 @@ def output_close(mystr, error = False):
     if output_index == 0:
         # if mystr is in format [ ... ] then its a json string. dont quote json array
         if '[' in mystr[0] and ']' in mystr[-1]:
-            print '{"status":"'+scode+'","'+skey+'":'+mystr+'}'
+            print('{"status":"'+scode+'","'+skey+'":'+mystr+'}')
         else:
-            print '{"status":"'+scode+'","'+skey+'":"'+mystr+'"}'
+            print('{"status":"'+scode+'","'+skey+'":"'+mystr+'"}')
     elif output_index == 1:
-        print scode
+        print(scode)
     
     close()
     if not error:
@@ -450,6 +453,7 @@ def init_serial():
         if output:
             msg = 'Serial Port ' + str(ser.port) + ' ' + str(ser.baudrate) + ' is being used by ...'
             debug_msg(msg)
+            output = str(output)
             txt = output.split('\n')
             for line in txt:
                 if line:
@@ -478,7 +482,7 @@ def init_serial():
 """
 Read from the Serial Port
 """
-def serial_read(search='OK', mytimeout=2, length=10):
+def serial_read(search='OK', mytimeout=3, length=1000):
     
     ret = {}
     ret['search'] = search
@@ -486,6 +490,8 @@ def serial_read(search='OK', mytimeout=2, length=10):
     curr_time = time.time()
     while True:
         holder = ser.read(length)
+        print(holder)
+        print(search)
         ret['read'] += str(holder)
         if search in ret['read']:
             ret['status']="Serial Read Search '"+search+"' Found."
@@ -752,7 +758,7 @@ arg list of dicts
 def verify_settings(mylist):
 
     for k0 in mylist:
-        for k1, v1 in mylist[k0].items():
+        for k1, v1 in list(mylist[k0].items()):
             if 'desc' in k1:
                 desc = v1
             elif 'query' in k1:
@@ -764,17 +770,18 @@ def verify_settings(mylist):
 
         debug_msg("Checking: "+desc, False)
         # save_at_command(msg)
-        ser.write(query+chr(13))
+        ser.write((query+chr(13)).encode())
         ret = serial_read('OK')
-        if not ret['success']:
+        print(ret)
+        if ret['success'] == False:
             debug_msg(" [ FAILED ]")
             debug_msg(" - Response: "+ret['status'])
             close()
         if expected not in ret['read']:
             debug_msg(" [ FAILED ]")
-            #debug_msg(" - Setting...")
+            debug_msg(" - Setting...")
             debug_msg(" - Setting: "+correct, False)
-            ser.write(correct+chr(13))
+            ser.write((correct+chr(13)).encode())
             ret = serial_read('OK')
             if not ret['success']:
                 debug_msg(" [ FAILED ]")
@@ -791,14 +798,14 @@ def verify_settings(mylist):
 """    
 Same as function command but msg is string
 """
-def at_command(msg, ok='OK', timeout=2, length=10):
+def at_command(msg, ok='OK', timeout=30, length=1000):
 
     if ser.is_open:
         save_at_command(msg)
 
         # t0 = time.time()
         #while True:
-        ser.write(msg+chr(13))
+        ser.write((msg+chr(13)).encode())
         ret = serial_read(ok, timeout, length)
 
         if not ret['success']:
@@ -822,7 +829,7 @@ def download_image(url):
     debug_msg("Downloading: "+url)
 
     # make a new filename
-    base = os.path.basename(urlparse.urlparse(url).path)
+    base = os.path.basename(urllib.parse.urlparse(url).path)
     
     if len(base) > 15:
         ext = os.path.splitext(base)[1]
@@ -839,20 +846,20 @@ def download_image(url):
 
     # Some files can't be downloaded without a User-agent Header. We have to make one
     # http://www.hanedanrpg.com/photos/hanedanrpg/14/65194.jpg
-    hdr = urllib2.Request(url, None, {'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'})
+    hdr = urllib.request.Request(url, None, {'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'})
 
     try: 
-        imgData = urllib2.urlopen(hdr, timeout=2).read()
+        imgData = urllib.request.urlopen(hdr, timeout=2).read()
 
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
         myerr = 'Downloading Image HTTPError = ' + str(e.code)
         output_close(myerr, True)
 
-    except urllib2.URLError, e:
+    except urllib.error.URLError as e:
         myerr = 'Downloading Image URLError = ' + str(e.reason)
         output_close(myerr, True)
 
-    except httplib.HTTPException, e:
+    except httplib.HTTPException as e:
         myerr = 'Downloading Image HTTPException'
         output_close(myerr, True)
 
@@ -958,7 +965,7 @@ def upload_file(file, ascii=False, clear_attachments=False):
     size = str(os.path.getsize(myfile))
   
     if ( size == os.path.getsize(myfile) ):
-        print "File "+myfile+" size is zero. Exiting."
+        print("File "+myfile+" size is zero. Exiting.")
         close()
 
     # attach the text file
@@ -1018,7 +1025,7 @@ def upload_file(file, ascii=False, clear_attachments=False):
         # Query the attachment
         result = at_command('AT+QMMSEDIT=5')
         if result['success']:
-            mylist = search_string(result['read'], '+QMMSEDIT: 5')
+            mylist = [search_string(result['read'], '+QMMSEDIT: 5')]
             for ln in mylist:
                 debug_msg(ln)
         else:
@@ -1189,7 +1196,7 @@ def delete_file(myfile):
         ## try to delete file ##
         try:
             os.remove(myfile)
-        except OSError, e:  ## if failed, report it back to the user ##
+        except OSError as e:  ## if failed, report it back to the user ##
             debug_msg("Error: %s - %s." % (e.filename,e.strerror))
             return False
 
@@ -1363,13 +1370,13 @@ if args['forwardsms']:
     #print "Good: "+args['forwardsms']
 if args['searchsms']:
     if not 'readall' in SMSAction and not 'forwardsms' in SMSAction:
-        print "If using Search (--searchsms)...\nMust have (-F 7059992222) or Read All (-R)"
+        print("If using Search (--searchsms)...\nMust have (-F 7059992222) or Read All (-R)")
         sys.exit()
     SMSAction.append('searchsms')
     SMSSearch = args['searchsms']
 if args['recipient'] is None or args['message'] is None:
     if not SMSAction:
-        print "Must have a Recipient (-r) and Message (-m) OR --help"
+        print("Must have a Recipient (-r) and Message (-m) OR --help")
         sys.exit()
 
 
@@ -1384,7 +1391,7 @@ else:
     if args['output'] in output_types:
         output_index = output_types.index(args['output'])
     else:
-        print "The output type: "+args['output']+' is not one of '+(', '.join(output_types))
+        print("The output type: "+args['output']+' is not one of '+(', '.join(output_types)))
         sys.exit()
 if args['debug']:
     debug = True
@@ -1507,7 +1514,6 @@ Create a Message and Send
 details_dict = create_message(args['recipient'], args['message'], args['image'], args['title'], args['altmsg'])
 
 status = send_message(details_dict)
-
 if not status:
     msg = "*** Error Sending Message: "+status+" ***"
     debug_msg(str(msg))
